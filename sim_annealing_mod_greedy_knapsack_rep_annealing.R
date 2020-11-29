@@ -178,6 +178,14 @@ mod_greedy <- function(knapsack, capacity) {
   return(ret_val)
 }
 
+#' invoke simulated annealing repeatedly 
+#'
+#' @param knapsack the knapsack instance
+#' @param capacity the knapsack capacity
+#' @param numrep the number of repetitions
+#'
+#' @return the best solution found
+#' @export
 rep_annealing <- function (knapsack, capacity, numrep = 100) {
   best_sol <- NULL
   for (i in 1:numrep) {
