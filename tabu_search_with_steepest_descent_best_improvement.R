@@ -45,7 +45,7 @@ tabu_search <- function(dat, x0, y0, maxit = 100, minimization = TRUE, tabu_size
       }  
     }
     cur_cand <- next_cand
-    last_ops <- c(last_ops, cur_cand$op)
+    last_ops <- tail(c(last_ops, cur_cand$op), tabu_size)
     cat("next val: ", cur_cand$val, "\n")
     num_it <- num_it + 1
   }
@@ -135,7 +135,7 @@ dat <- matrix(c(NA, -7, -6, - 5, - 4, - 3, - 2, - 1, 0, 1, 2, 3, 4, 5, 6, 7,
                 78, 94, 98, 148, 168, 223, 282, 339, 412, 510, 582), byrow=T, nrow=15)
 
 # invoke tabu search heuristic
-sol <- tabu_search(dat, x0 = -7, y0 = 7, tabu = 3, maxit = 25)
-print(sol)
 sol <- tabu_search(dat, x0 = -7, y0 = -6, tabu = 1, maxit = 25)
+print(sol)
+sol <- tabu_search(dat, x0 = -7, y0 = 7, tabu = 3, maxit = 25)
 print(sol)
