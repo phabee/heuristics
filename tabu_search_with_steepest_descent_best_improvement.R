@@ -12,37 +12,41 @@
 #' @export
 tabu_search <- function(dat, x0, y0, maxit = 100, minimization = TRUE, tabu_size = 1) {
   num_it <- 0
-  cur_x <- x0
-  cur_y <- y0
-  best_cand <- list(x=x0, y=y0, val=get_mat_value(dat, x0, y0), op=0)
+  cur_cand <- list(x=x0, y=y0, val=get_mat_value(dat, x0, y0), op=0)
+  best_cand <- cur_cand
   last_ops <- c()
   while(num_it < maxit) {
-    cur_val <- get_mat_value(dat, cur_x, cur_y)
-    best_val <- cur_val
+    # cur_val <- get_mat_value(dat, cur_x, cur_y)
+    # best_val <- cur_val
     # calc neighborhood
-    nb <- neighborhood(dat, cur_x, cur_y)
-    no_improvement <- TRUE
+    nb <- neighborhood(dat, cur_cand$x, cur_cand$y)
+    next_cand <- NULL
+    # check every neighbor solution attainable f
     for (i in 1:length(nb)) {
-      # check all neighbors and pick best, if available
       cand <- nb[[i]]
-      if (minimization && cand$val < best_val || 
-          !minimization && cand$val > best_val) {
-        # make sure to prevent opposite move
-        if (!get_opposite_move(cand$op) %in% tail(last_ops, tabu_size)) {
-          # better solution found  
-          best_val <- cand$val
-          best_cand <- cand
-          cur_x <- cand$x
-          cur_y <- cand$y
-          no_improvement <- FALSE
+      # check, if operation not in tabu list
+      if (!get_opposite_move(cand$op) %in% tail(last_ops, tabu_size)) {
+        # move allowed
+        if (is.null(next_cand))
+          next_cand <- cand
+        # check if it's better than tha last 'next' candidate and update, if so
+        # then check if it's better than best candiate and update that, if so
+        if (minimization) {
+          if (cand$val < next_cand$val) 
+            next_cand <- cand
+          if (cand$val < best_cand$val) 
+            best_cand <- cand
+        } else {
+          if (cand$val > next_cand$val) 
+            next_cand <- cand
+          if (cand$val > best_cand$val) 
+            best_cand <- cand
         }
-      }
+      }  
     }
-    last_ops <- c(last_ops, best_cand$op)
-    if (no_improvement)
-      break
-    else
-      cat("next val: ", best_cand$val, "\n")
+    cur_cand <- next_cand
+    last_ops <- c(last_ops, cur_cand$op)
+    cat("next val: ", cur_cand$val, "\n")
     num_it <- num_it + 1
   }
   return(best_cand)
@@ -112,7 +116,23 @@ get_mat_value <- function(dat, x, y) {
   return (dat[y_id, x_id])
 }
 
-dat <- matrix(c(NA, -7, -6, - 5, - 4, - 3, - 2, - 1, 0, 1, 2, 3, 4, 5, 6, 7, -6,248, 216, 210, 222, 230, 234, 256, 304, 336, 372, 428, 495, 585, 650, 754, -5, 193, 175, 157, 166, 174, 181, 215, 249, 295, 329, 382, 454, 539, 597, 707, -4, 138, 144, 126, 116, 124, 150, 184, 194, 250, 305, 361, 425, 480, 566, 646, -3, 123, 89, 85, 97, 105, 109, 129, 179, 209, 246, 302, 368, 458, 525, 627, -2, 92, 58, 70, 70, 78, 94, 98, 148, 168, 223, 282, 339, 413, 510, 582, -1, 68, 34, 46, 46, 54, 70, 74, 124, 144, 199, 258, 315, 388, 486, 558, 0, 51, 17, 14, 25, 33, 38, 57, 107, 136, 174, 230, 296, 386, 454, 555, 1, 18, 25, 5, -4,3, 29, 65, 74, 131, 185, 240, 305, 361, 445, 527, 2, 27, 6, -10, 0, 8, 13, 46, 83, 126, 160, 213, 284, 371, 429, 539, 3, 33, 0, -3, 7, 15, 20, 39, 89, 118, 156, 212, 278, 368, 436, 537, 4, 33, 12, -4, 6, 14, 19, 52, 89, 132, 166, 219, 290, 377, 435, 545, 5, 30, 37, 17, 7, 15, 41, 77, 86, 143, 197, 252, 317, 373, 457, 539, 6, 69, 35, 32, 43, 51, 56, 75, 125, 154, 192, 248, 314, 404, 472, 573, 7, 92, 58, 70, 70, 78, 94, 98, 148, 168, 223, 282, 339, 412, 510, 582), byrow=T, nrow=15)
+dat <- matrix(c(NA, -7, -6, - 5, - 4, - 3, - 2, - 1, 0, 1, 2, 3, 4, 5, 6, 7, 
+                -6,248, 216, 210, 222, 230, 234, 256, 304, 336, 372, 428, 495,
+                585, 650, 754, -5, 193, 175, 157, 166, 174, 181, 215, 249, 295,
+                329, 382, 454, 539, 597, 707, -4, 138, 144, 126, 116, 124, 150,
+                184, 194, 250, 305, 361, 425, 480, 566, 646, -3, 123, 89, 85, 97,
+                105, 109, 129, 179, 209, 246, 302, 368, 458, 525, 627, -2, 92,
+                58, 70, 70, 78, 94, 98, 148, 168, 223, 282, 339, 413, 510, 582,
+                -1, 68, 34, 46, 46, 54, 70, 74, 124, 144, 199, 258, 315, 388,
+                486, 558, 0, 51, 17, 14, 25, 33, 38, 57, 107, 136, 174, 230, 
+                296, 386, 454, 555, 1, 18, 25, 5, -4,3, 29, 65, 74, 131, 185, 
+                240, 305, 361, 445, 527, 2, 27, 6, -10, 0, 8, 13, 46, 83, 126,
+                160, 213, 284, 371, 429, 539, 3, 33, 0, -3, 7, 15, 20, 39, 89, 
+                118, 156, 212, 278, 368, 436, 537, 4, 33, 12, -4, 6, 14, 19, 52,
+                89, 132, 166, 219, 290, 377, 435, 545, 5, 30, 37, 17, 7, 15, 41, 
+                77, 86, 143, 197, 252, 317, 373, 457, 539, 6, 69, 35, 32, 43, 51,
+                56, 75, 125, 154, 192, 248, 314, 404, 472, 573, 7, 92, 58, 70, 70,
+                78, 94, 98, 148, 168, 223, 282, 339, 412, 510, 582), byrow=T, nrow=15)
 
 # invoke tabu search heuristic
 sol <- tabu_search(dat, x0 = -7, y0 = 7, tabu = 3, maxit = 25)
